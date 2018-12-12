@@ -106,8 +106,8 @@ resource "aws_codepipeline" "pipeline" {
       output_artifacts = ["source"]
 
       configuration {
-        Owner      = "duduribeiro"
-        Repo       = "prometheus_experiment"
+        Owner      = "MathewHD"
+        Repo       = "terraform_ecs_fargate_example"
         Branch     = "master"
       }
     }
