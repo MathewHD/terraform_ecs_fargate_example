@@ -1,19 +1,19 @@
 /*====
 Cloudwatch Log Group
 ======*/
-resource "aws_cloudwatch_log_group" "openjobs" {
-  name = "openjobs"
+resource "aws_cloudwatch_log_group" "prometheus" {
+  name = "prometheus"
 
   tags {
     Environment = "${var.environment}"
-    Application = "OpenJobs"
+    Application = "prometheus"
   }
 }
 
 /*====
 ECR repository to store our Docker images
 ======*/
-resource "aws_ecr_repository" "openjobs_app" {
+resource "aws_ecr_repository" "prometheus_app" {
   name = "${var.repository_name}"
 }
 
@@ -33,10 +33,10 @@ data "template_file" "web_task" {
   template = "${file("${path.module}/tasks/web_task_definition.json")}"
 
   vars {
-    image           = "${aws_ecr_repository.openjobs_app.repository_url}"
+    image           = "${aws_ecr_repository.prometheus_app.repository_url}"
     secret_key_base = "${var.secret_key_base}"
     database_url    = "postgresql://${var.database_username}:${var.database_password}@${var.database_endpoint}:5432/${var.database_name}?encoding=utf8&pool=40"
-    log_group       = "${aws_cloudwatch_log_group.openjobs.name}"
+    log_group       = "${aws_cloudwatch_log_group.prometheus.name}"
   }
 }
 
@@ -56,10 +56,10 @@ data "template_file" "db_migrate_task" {
   template = "${file("${path.module}/tasks/db_migrate_task_definition.json")}"
 
   vars {
-    image           = "${aws_ecr_repository.openjobs_app.repository_url}"
+    image           = "${aws_ecr_repository.prometheus_app.repository_url}"
     secret_key_base = "${var.secret_key_base}"
     database_url    = "postgresql://${var.database_username}:${var.database_password}@${var.database_endpoint}:5432/${var.database_name}?encoding=utf8&pool=40"
-    log_group       = "openjobs"
+    log_group       = "prometheus"
   }
 }
 
@@ -125,19 +125,19 @@ resource "aws_security_group" "web_inbound_sg" {
   }
 }
 
-resource "aws_alb" "alb_openjobs" {
-  name            = "${var.environment}-alb-openjobs"
+resource "aws_alb" "alb_prometheus" {
+  name            = "${var.environment}-alb-prometheus"
   subnets         = ["${var.public_subnet_ids}"]
   security_groups = ["${var.security_groups_ids}", "${aws_security_group.web_inbound_sg.id}"]
 
   tags {
-    Name        = "${var.environment}-alb-openjobs"
+    Name        = "${var.environment}-alb-prometheus"
     Environment = "${var.environment}"
   }
 }
 
-resource "aws_alb_listener" "openjobs" {
-  load_balancer_arn = "${aws_alb.alb_openjobs.arn}"
+resource "aws_alb_listener" "prometheus" {
+  load_balancer_arn = "${aws_alb.alb_prometheus.arn}"
   port              = "80"
   protocol          = "HTTP"
   depends_on        = ["aws_alb_target_group.alb_target_group"]
@@ -324,7 +324,7 @@ resource "aws_appautoscaling_policy" "down" {
 
 /* metric used for auto scale */
 resource "aws_cloudwatch_metric_alarm" "service_cpu_high" {
-  alarm_name          = "${var.environment}_openjobs_web_cpu_utilization_high"
+  alarm_name          = "${var.environment}_prometheus_web_cpu_utilization_high"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "2"
   metric_name         = "CPUUtilization"

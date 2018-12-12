@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "source" {
-  bucket        = "openjobs-experiment-source"
+  bucket        = "prometheus-experiment-source"
   acl           = "private"
   force_destroy = true
 }
@@ -60,8 +60,8 @@ data "template_file" "buildspec" {
 }
 
 
-resource "aws_codebuild_project" "openjobs_build" {
-  name          = "openjobs-codebuild"
+resource "aws_codebuild_project" "prometheus_build" {
+  name          = "prometheus-codebuild"
   build_timeout = "10"
   service_role  = "${aws_iam_role.codebuild_role.arn}"
 
@@ -86,7 +86,7 @@ resource "aws_codebuild_project" "openjobs_build" {
 /* CodePipeline */
 
 resource "aws_codepipeline" "pipeline" {
-  name     = "openjobs-pipeline"
+  name     = "prometheus-pipeline"
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
   artifact_store {
@@ -107,7 +107,7 @@ resource "aws_codepipeline" "pipeline" {
 
       configuration {
         Owner      = "duduribeiro"
-        Repo       = "openjobs_experiment"
+        Repo       = "prometheus_experiment"
         Branch     = "master"
       }
     }
@@ -126,7 +126,7 @@ resource "aws_codepipeline" "pipeline" {
       output_artifacts = ["imagedefinitions"]
 
       configuration {
-        ProjectName = "openjobs-codebuild"
+        ProjectName = "prometheus-codebuild"
       }
     }
   }
